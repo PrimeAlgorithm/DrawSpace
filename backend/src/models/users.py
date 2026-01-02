@@ -2,8 +2,12 @@ import uuid
 from datetime import datetime
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID, CITEXT
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from backend.src.models.boards import Board
+    from backend.src.models.elements import Element
 
 class User(Base):
     __tablename__ = "users"
@@ -27,4 +31,14 @@ class User(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+    boards: Mapped[list["Board"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    created_elements: Mapped[list["Element"]] = relationship(
+        back_populates="created_by",
+        foreign_keys="Element.user_created_id",
+        passive_deletes=True,
     )
