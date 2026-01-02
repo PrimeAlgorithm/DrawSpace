@@ -1,4 +1,4 @@
-from database import Base
+from src.database import Base
 
 from .users import User
 from .boards import Board

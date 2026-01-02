@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import EmailStr, BaseModel, Field, model_validator
 from datetime import timedelta
 from uuid import UUID
-from database import get_db
+from src.database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from src.models import User

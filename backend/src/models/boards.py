@@ -4,7 +4,7 @@ from sqlalchemy import String, DateTime, func, ForeignKey, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.mutable import MutableDict
-from database import Base
+from src.database import Base
 from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from backend.src.models.users import User
