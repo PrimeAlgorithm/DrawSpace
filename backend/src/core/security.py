@@ -31,7 +31,7 @@ def create_access_token(uuid: UUID, expire_time: timedelta) -> str:
 
 def decode_access_token(token: str) -> Dict[str, Any]:
     try:
-        payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=[AUTH_ALGORITHM])
+        payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=[AUTH_ALGORITHM])  # type: ignore
         return payload
     except jwt.exceptions.PyJWTError:
         raise HTTPException(

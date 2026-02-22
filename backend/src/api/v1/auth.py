@@ -131,7 +131,7 @@ async def login_user(user: UserLogin, db: Session = Depends(get_db)) -> AuthResp
         raise
 
     except SQLAlchemyError as e:
-        print(f"Database error during login: {e}")  # Log this properly
+        print(f"Database error during login: {e}")
         raise HTTPException(status_code=500, detail="A database error occurred")
 
     except Exception as e:
