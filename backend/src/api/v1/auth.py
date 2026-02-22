@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import EmailStr, BaseModel, Field, model_validator
+from pydantic import ConfigDict, EmailStr, BaseModel, Field, model_validator
 from datetime import timedelta
 from uuid import UUID
 from src.database import get_db
@@ -51,6 +51,8 @@ class UserOut(BaseModel):
     email: EmailStr
     first_name: str
     last_name: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuthResponse(BaseModel):
@@ -137,5 +139,5 @@ async def login_user(user: UserLogin, db: Session = Depends(get_db)) -> AuthResp
 
 
 @router.get("/me/", response_model=UserOut)
-async def me():
-    pass
+async def me(user: User = Depends(security.get_current_user)):
+    return user
