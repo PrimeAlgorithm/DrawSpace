@@ -145,3 +145,37 @@ async def update_board_name(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred",
         )
+
+
+@router.delete("/{board_id}")
+async def delete_board_name(
+    board_id: UUID,
+    user: User = Depends(security.get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        board = db.query(Board).filter_by(id=board_id, user_id=user.id).first()
+
+        if not board:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Board not found",
+            )
+
+        db.delete(board)
+        db.commit()
+
+        return None
+
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Update violates database constraints",
+        )
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred",
+        )
