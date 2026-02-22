@@ -44,6 +44,32 @@ class BoardDetailsOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+@router.post("/", response_model=BoardHighLevelOut)
+async def create_board(
+    board_details: BoardIn,
+    user: User = Depends(security.get_current_user),
+    db: Session = Depends(get_db),
+) -> Board:
+    new_board = Board(
+        user_id=user.id, name=board_details.name, properties={}, elements=[]
+    )
+
+    try:
+        db.add(new_board)
+        db.commit()
+        db.refresh(new_board)
+    except IntegrityError as e:
+        db.rollback()
+        error_message = str(e.orig)
+        print(f"Integrity Error details: {error_message}")
+        raise HTTPException(
+            status_code=400,
+            detail="A constraint was violated while attempting to create the board",
+        )
+
+    return new_board
+
+
 @router.get("/", response_model=List[BoardHighLevelOut])
 async def get_boards(
     user: User = Depends(security.get_current_user), db: Session = Depends(get_db)
@@ -82,27 +108,40 @@ async def get_board(
         raise HTTPException(status_code=500, detail="An internal server error occurred")
 
 
-@router.post("/", response_model=BoardHighLevelOut)
-async def create_board(
-    board_details: BoardIn,
+@router.put("/{board_id}", response_model=BoardHighLevelOut)
+async def update_board_name(
+    board_id: UUID,
+    board_in: BoardIn,
     user: User = Depends(security.get_current_user),
     db: Session = Depends(get_db),
 ) -> Board:
-    new_board = Board(
-        user_id=user.id, name=board_details.name, properties={}, elements=[]
-    )
-
     try:
-        db.add(new_board)
-        db.commit()
-        db.refresh(new_board)
-    except IntegrityError as e:
-        db.rollback()
-        error_message = str(e.orig)
-        print(f"Integrity Error details: {error_message}")
-        raise HTTPException(
-            status_code=400,
-            detail="A constraint was violated while attempting to create the board",
-        )
+        board = db.query(Board).filter_by(id=board_id, user_id=user.id).first()
 
-    return new_board
+        if not board:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Board not found",
+            )
+
+        # Make sure it's not empty
+        if board_in.name != "":
+            board.name = board_in.name
+
+        db.commit()
+        db.refresh(board)
+
+        return board
+
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Update violates database constraints",
+        )
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred",
+        )
