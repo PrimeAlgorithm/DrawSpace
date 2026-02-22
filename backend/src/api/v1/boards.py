@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from src.models.elements import ElementKind
 from src.database import get_db
 from src.models.boards import Board
 from src.models.users import User
@@ -18,7 +19,15 @@ class BoardIn(BaseModel):
     name: str
 
 
-class BoardOut(BaseModel):
+class ElementsOut(BaseModel):
+    id: UUID
+    board_id: UUID
+    user_created_id: Optional[UUID]
+    kind: ElementKind
+    z_index: int
+
+
+class BoardHighLevelOut(BaseModel):
     id: UUID
     name: str
     created_at: datetime
@@ -26,7 +35,16 @@ class BoardOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-@router.get("/", response_model=List[BoardOut])
+class BoardDetailsOut(BaseModel):
+    id: UUID
+    user_id: UUID
+    name: str
+    elements: list[ElementsOut]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+@router.get("/", response_model=List[BoardHighLevelOut])
 async def get_boards(
     user: User = Depends(security.get_current_user), db: Session = Depends(get_db)
 ) -> List[Board]:
@@ -42,7 +60,29 @@ async def get_boards(
         raise HTTPException(status_code=500, detail="An internal server error occurred")
 
 
-@router.post("/", response_model=BoardOut)
+@router.get("/{board_id}", response_model=BoardDetailsOut)
+async def get_board(
+    board_id: UUID,
+    user: User = Depends(security.get_current_user),
+    db: Session = Depends(get_db),
+) -> Board:
+    try:
+        result = db.query(Board).filter_by(id=board_id, user_id=user.id).first()
+
+        if not result:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Board could not be found")
+
+        return result
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        print(f"Database error during login: {e}")
+        raise HTTPException(status_code=500, detail="A database error occurred")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An internal server error occurred")
+
+
+@router.post("/", response_model=BoardHighLevelOut)
 async def create_board(
     board_details: BoardIn,
     user: User = Depends(security.get_current_user),
