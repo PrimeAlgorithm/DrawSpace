@@ -7,23 +7,27 @@ import { Error } from "./error/error.tsx";
 import { Board } from "./board/board.tsx";
 import "./index.css";
 import App from "./App.tsx";
+import { AuthProvider } from "./context/AuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <Routes>
-      {/* Landing Page */}
-      <Route path="/" element={<App />} />
+  <AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Landing Page */}
+        <Route path="/" element={<App />} />
 
-      {/* Auth Pages */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+        {/* Auth Pages */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* 404 */}
-      <Route path="*" element={<Error />} />
+        {/* 404 */}
+        <Route path="*" element={<Error />} />
 
-      {/* Protected Board Routes */}
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/board/:boardId" element={<Board />} />
-    </Routes>
-  </BrowserRouter>
+        {/* Protected Board Routes */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/board/:boardId" element={<Board />} />
+      </Routes>
+    </BrowserRouter>
+
+  </AuthProvider>
 );

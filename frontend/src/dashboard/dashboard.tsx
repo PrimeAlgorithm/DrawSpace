@@ -2,6 +2,8 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./sidebar/app-sidebar";
 import { TopHeader } from "./header/top-header";
 import { CardHolder } from "./cards/card-holder";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router";
 
 export const Dashboard = () => {
   const boards = [
@@ -9,6 +11,15 @@ export const Dashboard = () => {
     { id: "2", name: "Design Wireframes", created_at: "2025-01-14" },
     { id: "3", name: "Team Brainstorm", created_at: "2025-01-13" },
   ];
+
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  if (loading) return <div>Loading...</div>;
+  if (!user) {
+    navigate("/login")
+    return null;
+  }
 
   return (
     <SidebarProvider>

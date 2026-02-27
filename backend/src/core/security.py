@@ -1,5 +1,5 @@
-from typing import Any, Dict, cast
-from fastapi import Depends, HTTPException, status
+from typing import Any, Dict
+from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.database import get_db
 from fastapi.security import OAuth2PasswordBearer
@@ -41,21 +41,29 @@ def decode_access_token(token: str) -> Dict[str, Any]:
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    token: str | None = Depends(oauth2_scheme),
+    access_token_cookie: str | None = Cookie(default=None, alias="access_token"),
+    db: Session = Depends(get_db),
 ) -> User:
-    payload = decode_access_token(token)
-    user_uuid = cast(str | None, payload.get("uuid"))
+    token_to_use = token or access_token_cookie
 
-    if user_uuid is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload"
-        )
-
-    user = db.query(User).filter(User.id == user_uuid).first()
-    if user is None:
+    if not token_to_use:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail="Not authenticated",
         )
+
+    if token_to_use.lower().startswith("bearer "):
+        token_to_use = token_to_use.split(" ", 1)[1].strip()
+
+    payload = decode_access_token(token_to_use)
+    user_uuid = payload.get("uuid")
+
+    if not user_uuid:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    user = db.query(User).filter(User.id == user_uuid).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
 
     return user

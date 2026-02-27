@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import ConfigDict, EmailStr, BaseModel, Field, model_validator
 from datetime import timedelta
 from uuid import UUID
@@ -63,7 +63,7 @@ class AuthResponse(BaseModel):
 
 @router.post("/register/", response_model=AuthResponse)
 async def register_user(
-    user_info: UserCreate, db: Session = Depends(get_db)
+    user_info: UserCreate, response: Response, db: Session = Depends(get_db)
 ) -> AuthResponse:
     password_hashed = security.get_password_hash(user_info.password)
 
@@ -88,6 +88,16 @@ async def register_user(
         new_user.id, timedelta(days=ACCESS_TOKEN_EXPIRE_TIME_DAYS)
     )
 
+    response.set_cookie(
+        key="access_token",
+        value=generated_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_TIME_DAYS * 24 * 60 * 60,
+        path="/",
+    )
+
     return AuthResponse(
         access_token=generated_token,
         user=UserOut(
@@ -100,7 +110,9 @@ async def register_user(
 
 
 @router.post("/login/", response_model=AuthResponse)
-async def login_user(user: UserLogin, db: Session = Depends(get_db)) -> AuthResponse:
+async def login_user(
+    user: UserLogin, response: Response, db: Session = Depends(get_db)
+) -> AuthResponse:
     try:
         result = db.query(User).filter_by(email=user.email).first()
 
@@ -116,6 +128,16 @@ async def login_user(user: UserLogin, db: Session = Depends(get_db)) -> AuthResp
 
         generated_token = security.create_access_token(
             result.id, timedelta(days=ACCESS_TOKEN_EXPIRE_TIME_DAYS)
+        )
+
+        response.set_cookie(
+            key="access_token",
+            value=generated_token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=ACCESS_TOKEN_EXPIRE_TIME_DAYS * 24 * 60 * 60,
+            path="/",
         )
 
         return AuthResponse(
