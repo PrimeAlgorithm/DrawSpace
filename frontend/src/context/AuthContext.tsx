@@ -1,3 +1,4 @@
+import { config } from "@/config";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface User {
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function checkAuth() {
         try {
-            const res = await fetch("http://localhost:8000/api/v1/auth/me");
+            const res = await fetch(config.apiUrl + "/auth/me");
             if (res.ok) {
                 const data: User = await res.json();
                 setUser(data);
