@@ -14,8 +14,11 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ChevronUp } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export const AppSidebarFooter = () => {
+  const { user } = useAuth()
+
   return (
     <SidebarFooter>
       <SidebarMenu>
@@ -28,8 +31,8 @@ export const AppSidebarFooter = () => {
                   <AvatarFallback>ER</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">John Doe</span>
-                  <span className="text-xs">john@example.com</span>
+                  <span className="font-semibold">{user?.name}</span>
+                  <span className="text-xs">{user?.email}</span>
                 </div>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>

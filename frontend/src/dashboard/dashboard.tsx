@@ -32,6 +32,6 @@ export const Dashboard = () => {
           </main>
         </div>
       </SidebarInset>
-    </SidebarProvider>
+    </SidebarProvider >
   );
 };
