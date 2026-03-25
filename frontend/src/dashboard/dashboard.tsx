@@ -3,7 +3,7 @@ import { AppSidebar } from "./sidebar/app-sidebar";
 import { TopHeader } from "./header/top-header";
 import { CardHolder } from "./cards/card-holder";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router";
+import { Navigate } from "react-router";
 
 export const Dashboard = () => {
   const boards = [
@@ -13,12 +13,9 @@ export const Dashboard = () => {
   ];
 
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
   if (loading) return <div>Loading...</div>;
   if (!user) {
-    navigate("/login")
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   return (

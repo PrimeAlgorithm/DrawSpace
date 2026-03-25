@@ -40,7 +40,7 @@ export const Register = () => {
     setError("");
 
     try {
-      const response = await apiFetch(config.apiUrl + "/auth/register", {
+      const response = await apiFetch(config.apiUrl + "/auth/register/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

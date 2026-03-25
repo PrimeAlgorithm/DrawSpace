@@ -1,5 +1,6 @@
 import { config } from "@/config";
 import { createContext, useContext, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 interface User {
     id: string;
@@ -26,7 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function checkAuth() {
         try {
-            const res = await fetch(config.apiUrl + "/auth/me");
+            const res = await apiFetch(config.apiUrl + "/auth/me/", {
+                redirectOnUnauthorized: false,
+            });
             if (res.ok) {
                 const data: User = await res.json();
                 setUser(data);
